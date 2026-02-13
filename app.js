@@ -16,20 +16,68 @@ function pickUnique(arr, count) {
   return results;
 }
 
-function getThreat(guardStr, rank) {
-  let threat;
-  if (guardStr.includes("Single")) {
-    threat = pick(DATA.singleThreat);
-  } else if (guardStr.includes("Two") || guardStr.includes("five")) {
-    threat = pick(DATA.smallThreat);
-  } else if (guardStr.includes("squads")) {
-    threat = pick(DATA.squadThreat);
-  } else if (guardStr.includes("army")) {
-    threat = pick(DATA.armyThreat);
+const RANK_ORDER = ["F", "E", "D", "C", "B", "A", "S"];
+
+const RANK_NAMES = {
+  "F": "Civilian",
+  "E": "Academy Student",
+  "D": "Genin",
+  "C": "Chūnin",
+  "B": "Sp. Jōnin",
+  "A": "Jōnin",
+  "S": "Kage/Sannin"
+};
+
+function resolveRank(baseRank, offset) {
+  const idx = RANK_ORDER.indexOf(baseRank);
+  const newIdx = Math.max(0, Math.min(RANK_ORDER.length - 1, idx + offset));
+  return RANK_ORDER[newIdx];
+}
+
+function resolveEntry(entry, baseRank) {
+  let rank;
+  if (entry.fixedRank) {
+    rank = entry.fixedRank;
   } else {
-    return "None";
+    rank = resolveRank(baseRank, entry.rankOffset);
+    if (entry.minRank) {
+      const minIdx = RANK_ORDER.indexOf(entry.minRank);
+      const curIdx = RANK_ORDER.indexOf(rank);
+      if (curIdx < minIdx) rank = entry.minRank;
+    }
   }
-  return threat.replace(/Rank/g, rank);
+  return `${entry.count} × ${rank}-Rank (${RANK_NAMES[rank]})`;
+}
+
+function resolveThreatGroup(threatObj, baseRank) {
+  const lines = threatObj.entries.map(e => resolveEntry(e, baseRank));
+  return { name: threatObj.name, lines };
+}
+
+function resolveTargetThreat(threatObj, baseRank) {
+  let rank;
+  if (threatObj.fixedRank) {
+    rank = threatObj.fixedRank;
+  } else {
+    rank = resolveRank(baseRank, threatObj.rankOffset);
+  }
+  return `${threatObj.name} — ${rank}-Rank (${RANK_NAMES[rank]})`;
+}
+
+function getThreat(guardStr, rank) {
+  let pool;
+  if (guardStr.includes("Single")) {
+    pool = DATA.singleThreat;
+  } else if (guardStr.includes("Two") || guardStr.includes("five")) {
+    pool = DATA.smallThreat;
+  } else if (guardStr.includes("squads")) {
+    pool = DATA.squadThreat;
+  } else if (guardStr.includes("army")) {
+    pool = DATA.armyThreat;
+  } else {
+    return { name: "None", lines: [] };
+  }
+  return resolveThreatGroup(pick(pool), rank);
 }
 
 function getWeather(location) {
@@ -57,8 +105,16 @@ function getRules(type) {
   return rules.join(" · ");
 }
 
-function buildField(label, value, icon = "◈") {
-  return `<div class="field"><span class="field-icon">${icon}</span><span class="field-label">${label}:</span> <span class="field-value">｢ ${value} ｣</span></div>`;
+function buildThreatField(label, threatResult) {
+  let html = `<div class="field"><span class="field-icon">◈</span><span class="field-label">${label}:</span> <span class="field-value">｢ ${threatResult.name} ｣</span></div>`;
+  if (threatResult.lines && threatResult.lines.length > 0) {
+    html += `<div class="threat-breakdown">`;
+    threatResult.lines.forEach(line => {
+      html += `<div class="threat-line">${line}</div>`;
+    });
+    html += `</div>`;
+  }
+  return html;
 }
 
 // ─── GENERATORS ───
