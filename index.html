@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mission Generator</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="bg-pattern"></div>
+
+  <div class="container">
+
+    <div class="header">
+      <h1>Mission Generator</h1>
+      <p>Randomized shinobi mission briefings — select type, rank, and generate.</p>
+    </div>
+
+    <div class="controls">
+      <div class="control-grid">
+        <div class="control-group">
+          <label for="missionType">Mission Type</label>
+          <select id="missionType">
+            <option value="sabotage">Sabotage</option>
+            <option value="assassinate">Assassination</option>
+            <option value="bodyguard">Bodyguard</option>
+            <option value="defend">Defense</option>
+            <option value="recon">Reconnaissance</option>
+            <option value="theft">Theft</option>
+            <option value="acquire">Target Acquisition</option>
+            <option value="caravan">Caravan Escort</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="rank">Player Rank</label>
+          <select id="rank">
+            <option value="E">E — Academy/Pre-Genin</option>
+            <option value="D">D — Genin</option>
+            <option value="C" selected>C — Chūnin</option>
+            <option value="B">B — Special Jōnin</option>
+            <option value="A">A — Jōnin</option>
+            <option value="S">S — Sannin/Kage</option>
+          </select>
+        </div>
+
+        <div class="control-group hidden" id="originGroup">
+          <label for="origin">Origin Village (Caravan)</label>
+          <select id="origin">
+            <option value="Konohagakure">Konohagakure</option>
+            <option value="Sunagakure">Sunagakure</option>
+            <option value="Iwagakure">Iwagakure</option>
+            <option value="Kumogakure">Kumogakure</option>
+            <option value="Kirigakure">Kirigakure</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn-generate" onclick="generate()">Generate Mission</button>
+    </div>
+
+    <div id="output" class="hidden">
+      <div class="mission-card" id="missionCard">
+        <div class="mission-card-header">
+          <h2 id="missionTitle"></h2>
+          <span class="rank-badge" id="rankBadge"></span>
+        </div>
+        <div class="mission-card-body" id="missionFields"></div>
+      </div>
+
+      <div class="copy-section">
+        <button class="btn-copy" id="copyBtn" onclick="copyToClipboard()">📋 Copy to Clipboard</button>
+      </div>
+
+      <textarea class="copy-data" id="copyData" readonly></textarea>
+    </div>
+
+  </div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
