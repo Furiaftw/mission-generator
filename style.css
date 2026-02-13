@@ -309,3 +309,25 @@ textarea.copy-data {
     padding-right: 18px;
   }
 }
+
+/* ─── THREAT BREAKDOWN ─── */
+
+.threat-breakdown {
+  padding: 8px 0 10px 32px;
+  border-bottom: 1px solid rgba(42, 42, 74, 0.5);
+}
+
+.threat-line {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  padding: 3px 0 3px 16px;
+  position: relative;
+}
+
+.threat-line::before {
+  content: "↳";
+  position: absolute;
+  left: 0;
+  color: var(--text-muted);
+}
