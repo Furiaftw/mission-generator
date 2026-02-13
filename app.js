@@ -21,11 +21,10 @@ function pickUnique(arr, count) {
 
 // ─── RANK RESOLUTION ───
 
-var RANK_ORDER = ["F", "E", "D", "C", "B", "A", "S"];
+var RANK_ORDER = ["F", "D", "C", "B", "A", "S"];
 
 var RANK_NAMES = {
   "F": "Civilian",
-  "E": "Academy Student",
   "D": "Genin",
   "C": "Chūnin",
   "B": "Sp. Jōnin",
@@ -35,6 +34,7 @@ var RANK_NAMES = {
 
 function resolveRank(baseRank, offset) {
   var idx = RANK_ORDER.indexOf(baseRank);
+  if (idx === -1) idx = 0;
   var newIdx = idx + offset;
   if (newIdx < 0) newIdx = 0;
   if (newIdx > RANK_ORDER.length - 1) newIdx = RANK_ORDER.length - 1;

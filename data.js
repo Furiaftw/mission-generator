@@ -7,7 +7,7 @@ const DATA = {
     "Land of Tea"
   ],
 
-  ranks: ["F", "E", "D", "C", "B", "A", "S"],
+  ranks: ["F", "D", "C", "B", "A", "S"],
 
   weather: ["Sunshine", "Overcast", "High Wind", "Rain", "Heavy Rain", "Thunderstorm", "Foggy"],
 
@@ -155,7 +155,7 @@ const DATA = {
       { count: "1-2", rankOffset: -2 }
     ]},
     { name: "Militia", entries: [
-      { count: "20", rankOffset: -4, minRank: "E" }
+      { count: "20", rankOffset: -4, minRank: "D" }
     ]},
     { name: "Sorta Elite Team", entries: [
       { count: "4", rankOffset: -1 },
@@ -173,14 +173,14 @@ const DATA = {
   armyThreat: [
     { name: "Riot", entries: [
       { count: "20+", fixedRank: "F" },
-      { count: "0-20", fixedRank: "E" }
+      { count: "0-20", fixedRank: "D" }
     ]},
     { name: "Actual Army", entries: [
-      { count: "40+", rankOffset: -3, minRank: "E" },
-      { count: "1-5", rankOffset: -2, minRank: "E" }
+      { count: "40+", rankOffset: -3, minRank: "D" },
+      { count: "1-5", rankOffset: -2, minRank: "D" }
     ]},
     { name: "Eclectic Mix", entries: [
-      { count: "30+", rankOffset: -4, minRank: "E" },
+      { count: "30+", rankOffset: -4, minRank: "D" },
       { count: "10", rankOffset: -3 },
       { count: "4", rankOffset: -2 },
       { count: "1", rankOffset: 0 }
@@ -189,14 +189,13 @@ const DATA = {
       { count: "50+", fixedRank: "F" }
     ]},
     { name: "Champion and Army", entries: [
-      { count: "20+", rankOffset: -4, minRank: "E" },
+      { count: "20+", rankOffset: -4, minRank: "D" },
       { count: "1-2", rankOffset: 1 }
     ]}
   ],
 
   targetThreat: [
     { name: "Civilian", fixedRank: "F" },
-    { name: "Trained Civilian", fixedRank: "E" },
     { name: "Much Weaker", rankOffset: -2 },
     { name: "Weaker", rankOffset: -1 },
     { name: "Equivalent", rankOffset: 0 },
