@@ -1,24 +1,29 @@
+// ─── UTILITIES ───
+
 function pick(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function maybe(arr, chance = 0.5) {
+function maybe(arr, chance) {
+  if (chance === undefined) chance = 0.5;
   return Math.random() < chance ? pick(arr) : null;
 }
 
 function pickUnique(arr, count) {
-  const pool = [...arr];
-  const results = [];
-  for (let i = 0; i < count && pool.length > 0; i++) {
-    const idx = Math.floor(Math.random() * pool.length);
+  var pool = arr.slice();
+  var results = [];
+  for (var i = 0; i < count && pool.length > 0; i++) {
+    var idx = Math.floor(Math.random() * pool.length);
     results.push(pool.splice(idx, 1)[0]);
   }
   return results;
 }
 
-const RANK_ORDER = ["F", "E", "D", "C", "B", "A", "S"];
+// ─── RANK RESOLUTION ───
 
-const RANK_NAMES = {
+var RANK_ORDER = ["F", "E", "D", "C", "B", "A", "S"];
+
+var RANK_NAMES = {
   "F": "Civilian",
   "E": "Academy Student",
   "D": "Genin",
@@ -29,50 +34,59 @@ const RANK_NAMES = {
 };
 
 function resolveRank(baseRank, offset) {
-  const idx = RANK_ORDER.indexOf(baseRank);
-  const newIdx = Math.max(0, Math.min(RANK_ORDER.length - 1, idx + offset));
+  var idx = RANK_ORDER.indexOf(baseRank);
+  var newIdx = idx + offset;
+  if (newIdx < 0) newIdx = 0;
+  if (newIdx > RANK_ORDER.length - 1) newIdx = RANK_ORDER.length - 1;
   return RANK_ORDER[newIdx];
 }
 
 function resolveEntry(entry, baseRank) {
-  let rank;
+  var rank;
   if (entry.fixedRank) {
     rank = entry.fixedRank;
   } else {
     rank = resolveRank(baseRank, entry.rankOffset);
     if (entry.minRank) {
-      const minIdx = RANK_ORDER.indexOf(entry.minRank);
-      const curIdx = RANK_ORDER.indexOf(rank);
+      var minIdx = RANK_ORDER.indexOf(entry.minRank);
+      var curIdx = RANK_ORDER.indexOf(rank);
       if (curIdx < minIdx) rank = entry.minRank;
     }
   }
-  return `${entry.count} × ${rank}-Rank (${RANK_NAMES[rank]})`;
+  return entry.count + " × " + rank + "-Rank (" + RANK_NAMES[rank] + ")";
 }
 
 function resolveThreatGroup(threatObj, baseRank) {
-  const lines = threatObj.entries.map(e => resolveEntry(e, baseRank));
-  return { name: threatObj.name, lines };
+  var lines = [];
+  for (var i = 0; i < threatObj.entries.length; i++) {
+    lines.push(resolveEntry(threatObj.entries[i], baseRank));
+  }
+  return { name: threatObj.name, lines: lines };
 }
 
 function resolveTargetThreat(threatObj, baseRank) {
-  let rank;
+  var rank;
   if (threatObj.fixedRank) {
     rank = threatObj.fixedRank;
   } else {
     rank = resolveRank(baseRank, threatObj.rankOffset);
   }
-  return `${threatObj.name} — ${rank}-Rank (${RANK_NAMES[rank]})`;
+  return threatObj.name + " — " + rank + "-Rank (" + RANK_NAMES[rank] + ")";
 }
 
+// ─── THREAT LOOKUP ───
+
 function getThreat(guardStr, rank) {
-  let pool;
-  if (guardStr.includes("Single")) {
+  var pool;
+  if (guardStr.indexOf("Unguarded") !== -1) {
+    return { name: "None", lines: [] };
+  } else if (guardStr.indexOf("Single") !== -1) {
     pool = DATA.singleThreat;
-  } else if (guardStr.includes("Two") || guardStr.includes("five")) {
+  } else if (guardStr.indexOf("Two") !== -1 || guardStr.indexOf("five") !== -1) {
     pool = DATA.smallThreat;
-  } else if (guardStr.includes("squads")) {
+  } else if (guardStr.indexOf("squads") !== -1) {
     pool = DATA.squadThreat;
-  } else if (guardStr.includes("army")) {
+  } else if (guardStr.indexOf("army") !== -1) {
     pool = DATA.armyThreat;
   } else {
     return { name: "None", lines: [] };
@@ -80,59 +94,79 @@ function getThreat(guardStr, rank) {
   return resolveThreatGroup(pick(pool), rank);
 }
 
+// ─── FIELD BUILDERS ───
+
+function buildField(label, value) {
+  return '<div class="field">' +
+    '<span class="field-icon">◈</span>' +
+    '<span class="field-label">' + label + ':</span> ' +
+    '<span class="field-value">｢ ' + value + ' ｣</span>' +
+    '</div>';
+}
+
+function buildThreatField(label, threatResult) {
+  var html = '<div class="field">' +
+    '<span class="field-icon">◈</span>' +
+    '<span class="field-label">' + label + ':</span> ' +
+    '<span class="field-value">｢ ' + threatResult.name + ' ｣</span>' +
+    '</div>';
+  if (threatResult.lines && threatResult.lines.length > 0) {
+    html += '<div class="threat-breakdown">';
+    for (var i = 0; i < threatResult.lines.length; i++) {
+      html += '<div class="threat-line">' + threatResult.lines[i] + '</div>';
+    }
+    html += '</div>';
+  }
+  return html;
+}
+
+// ─── COMMON HELPERS ───
+
 function getWeather(location) {
-  let w = pick(DATA.weather);
-  if (DATA.coldRegions.includes(location) && DATA.coldWeather[w]) {
+  var w = pick(DATA.weather);
+  if (DATA.coldRegions.indexOf(location) !== -1 && DATA.coldWeather[w]) {
     w = DATA.coldWeather[w];
   }
   return w;
 }
 
-function getEnvironment(location, isVillage = false) {
+function getEnvironment(location, isVillage) {
   if (isVillage) return pick(DATA.envVillage);
-  return pick(DATA.env[location] || ["Capital"]);
+  var envList = DATA.env[location];
+  if (envList) return pick(envList);
+  return "Capital";
 }
 
 function getTarget(location) {
-  const land = DATA.landTargets[location];
+  var land = DATA.landTargets[location];
   if (land && Math.random() < 0.5) return pick(land);
   return pick(DATA.genericTargets);
 }
 
 function getRules(type) {
-  const pool = DATA.missionRules[type] || [];
-  const rules = pickUnique(pool, Math.random() < 0.5 ? 2 : 1);
+  var pool = DATA.missionRules[type] || [];
+  var count = Math.random() < 0.5 ? 2 : 1;
+  var rules = pickUnique(pool, count);
   return rules.join(" · ");
-}
-
-function buildThreatField(label, threatResult) {
-  let html = `<div class="field"><span class="field-icon">◈</span><span class="field-label">${label}:</span> <span class="field-value">｢ ${threatResult.name} ｣</span></div>`;
-  if (threatResult.lines && threatResult.lines.length > 0) {
-    html += `<div class="threat-breakdown">`;
-    threatResult.lines.forEach(line => {
-      html += `<div class="threat-line">${line}</div>`;
-    });
-    html += `</div>`;
-  }
-  return html;
 }
 
 // ─── GENERATORS ───
 
 function generateSabotage(rank) {
-  const loc = pick(DATA.locations);
-  const tgt = getTarget(loc);
-  const rules = getRules("sabotage");
-  const extra = maybe(DATA.extraRules);
-  const nc = pick(DATA.noncombatant);
-  const gd = pick(DATA.guardMod);
-  const threat = getThreat(gd, rank);
-  const weather = getWeather(loc);
-  const env = getEnvironment(loc);
-  const poi_val = maybe(DATA.poi);
-  const obj = maybe(DATA.additionalObjectives.sabotage || []);
+  var loc = pick(DATA.locations);
+  var tgt = getTarget(loc);
+  var rules = getRules("sabotage");
+  var extra = maybe(DATA.extraRules);
+  var nc = pick(DATA.noncombatant);
+  var gd = pick(DATA.guardMod);
+  var threat = getThreat(gd, rank);
+  var weather = getWeather(loc);
+  var env = getEnvironment(loc, false);
+  var poiVal = maybe(DATA.poi);
+  var objPool = DATA.additionalObjectives.sabotage || [];
+  var obj = maybe(objPool);
 
-  let html = buildField("Location", loc);
+  var html = buildField("Location", loc);
   html += buildField("Target", tgt);
   html += buildField("Special Rules", rules);
   if (extra) html += buildField("Extra Modifier", extra);
@@ -141,62 +175,64 @@ function generateSabotage(rank) {
   html += buildThreatField("Threat Level", threat);
   html += buildField("Weather", weather);
   html += buildField("Environment", env);
-  if (poi_val) html += buildField("Point of Interest", poi_val);
+  if (poiVal) html += buildField("Point of Interest", poiVal);
   if (obj) html += buildField("Additional Objective", obj);
-  return { html, rank, type: "sabotage", title: "Sabotage Mission" };
+  return { html: html, rank: rank, type: "sabotage", title: "Sabotage Mission" };
 }
 
 function generateAssassinate(rank) {
-  const isVillage = Math.random() < 0.02;
-  const loc = isVillage ? "Own Hidden Village" : pick(DATA.locations);
-  const tgt = isVillage ? pick(DATA.villageTargets) : pick(DATA.personTargets);
-  const rules = getRules("assassinate");
-  const extra = maybe(DATA.extraRules);
-  const tl = pick(DATA.targetLocation);
-  const gd = pick(DATA.guardMod);
-  const po = pick(DATA.populace);
-  const tt = resolveTargetThreat(pick(DATA.targetThreat), rank);
-  const threat = getThreat(gd, rank);
-  const weather = getWeather(loc === "Own Hidden Village" ? "Land of Fire" : loc);
-  const env = getEnvironment(loc === "Own Hidden Village" ? "Land of Fire" : loc, isVillage);
-  const setting = maybe(DATA.envGeneric);
-  const poi_val = maybe(DATA.poi);
+  var isVillage = Math.random() < 0.02;
+  var loc = isVillage ? "Own Hidden Village" : pick(DATA.locations);
+  var tgt = isVillage ? pick(DATA.villageTargets) : pick(DATA.personTargets);
+  var rules = getRules("assassinate");
+  var extra = maybe(DATA.extraRules);
+  var tl = pick(DATA.targetLocation);
+  var gd = pick(DATA.guardMod);
+  var po = pick(DATA.populace);
+  var tt = resolveTargetThreat(pick(DATA.targetThreat), rank);
+  var threat = getThreat(gd, rank);
+  var weatherLoc = isVillage ? "Land of Fire" : loc;
+  var weather = getWeather(weatherLoc);
+  var env = getEnvironment(isVillage ? "Land of Fire" : loc, isVillage);
+  var setting = maybe(DATA.envGeneric);
+  var poiVal = maybe(DATA.poi);
 
-  let html = buildField("Location", loc);
+  var html = buildField("Location", loc);
   html += buildField("Target", tgt);
   html += buildField("Target Threat", tt);
   html += buildField("Target Location", tl);
   html += buildField("Special Rules", rules);
   if (extra) html += buildField("Extra Modifier", extra);
   html += buildField("Local Populace", po);
+  html += buildField("Guards", gd);
   html += buildThreatField("Guard Threat", threat);
-  html += buildField("Guard Threat", threat);
   html += buildField("Weather", weather);
   html += buildField("Environment", env);
   if (setting) html += buildField("Setting", setting);
-  if (poi_val) html += buildField("Point of Interest", poi_val);
-  return { html, rank, type: "assassinate", title: "Assassination Mission" };
+  if (poiVal) html += buildField("Point of Interest", poiVal);
+  return { html: html, rank: rank, type: "assassinate", title: "Assassination Mission" };
 }
 
 function generateBodyguard(rank) {
-  const isVillage = Math.random() < 0.02;
-  const loc = isVillage ? "A Hidden Village" : pick(DATA.locations);
-  const tgt = pick(DATA.bodyguardTargets);
-  const rules = getRules("bodyguard");
-  const extra = maybe(DATA.extraRules);
-  const tl = pick(DATA.targetLocation);
-  const pe = pick(DATA.targetPersonality);
-  const mv = pick(DATA.targetMovement);
-  const am = pick(DATA.assassinMod);
-  const po = pick(DATA.populace);
-  const tt = resolveTargetThreat(pick(DATA.targetThreat), rank);
-  const threat = getThreat(am, rank);
-  const weather = getWeather(loc === "A Hidden Village" ? "Land of Fire" : loc);
-  const env = getEnvironment(loc === "A Hidden Village" ? "Land of Fire" : loc, isVillage);
-  const setting = maybe(DATA.envGeneric);
-  const poi_val = maybe(DATA.poi);
+  var isVillage = Math.random() < 0.02;
+  var loc = isVillage ? "A Hidden Village" : pick(DATA.locations);
+  var tgt = pick(DATA.bodyguardTargets);
+  var rules = getRules("bodyguard");
+  var extra = maybe(DATA.extraRules);
+  var tl = pick(DATA.targetLocation);
+  var pe = pick(DATA.targetPersonality);
+  var mv = pick(DATA.targetMovement);
+  var am = pick(DATA.assassinMod);
+  var po = pick(DATA.populace);
+  var tt = resolveTargetThreat(pick(DATA.targetThreat), rank);
+  var threat = getThreat(am, rank);
+  var weatherLoc = isVillage ? "Land of Fire" : loc;
+  var weather = getWeather(weatherLoc);
+  var env = getEnvironment(isVillage ? "Land of Fire" : loc, isVillage);
+  var setting = maybe(DATA.envGeneric);
+  var poiVal = maybe(DATA.poi);
 
-  let html = buildField("Location", loc);
+  var html = buildField("Location", loc);
   html += buildField("Client", tgt);
   html += buildField("Client Threat", tt);
   html += buildField("Personality", pe);
@@ -210,24 +246,25 @@ function generateBodyguard(rank) {
   html += buildField("Weather", weather);
   html += buildField("Environment", env);
   if (setting) html += buildField("Setting", setting);
-  if (poi_val) html += buildField("Point of Interest", poi_val);
-  return { html, rank, type: "bodyguard", title: "Bodyguard Mission" };
+  if (poiVal) html += buildField("Point of Interest", poiVal);
+  return { html: html, rank: rank, type: "bodyguard", title: "Bodyguard Mission" };
 }
 
 function generateDefend(rank) {
-  const loc = pick(DATA.locations);
-  const tgt = getTarget(loc);
-  const rules = getRules("defend");
-  const extra = maybe(DATA.extraRules);
-  const nc = pick(DATA.noncombatant);
-  const am = pick(DATA.attackerMod);
-  const threat = getThreat(am, rank);
-  const weather = getWeather(loc);
-  const env = getEnvironment(loc);
-  const poi_val = maybe(DATA.poi);
-  const obj = maybe(DATA.additionalObjectives.defend || []);
+  var loc = pick(DATA.locations);
+  var tgt = getTarget(loc);
+  var rules = getRules("defend");
+  var extra = maybe(DATA.extraRules);
+  var nc = pick(DATA.noncombatant);
+  var am = pick(DATA.attackerMod);
+  var threat = getThreat(am, rank);
+  var weather = getWeather(loc);
+  var env = getEnvironment(loc, false);
+  var poiVal = maybe(DATA.poi);
+  var objPool = DATA.additionalObjectives.defend || [];
+  var obj = maybe(objPool);
 
-  let html = buildField("Location", loc);
+  var html = buildField("Location", loc);
   html += buildField("Defend Target", tgt);
   html += buildField("Special Rules", rules);
   if (extra) html += buildField("Extra Modifier", extra);
@@ -236,32 +273,34 @@ function generateDefend(rank) {
   html += buildThreatField("Threat Level", threat);
   html += buildField("Weather", weather);
   html += buildField("Environment", env);
-  if (poi_val) html += buildField("Point of Interest", poi_val);
+  if (poiVal) html += buildField("Point of Interest", poiVal);
   if (obj) html += buildField("Additional Objective", obj);
-  return { html, rank, type: "defend", title: "Defense Mission" };
+  return { html: html, rank: rank, type: "defend", title: "Defense Mission" };
 }
 
 function generateRecon(rank) {
-  const loc = pick(DATA.locations);
-  const isPerson = Math.random() < 0.5;
-  let tgt;
+  var loc = pick(DATA.locations);
+  var isPerson = Math.random() < 0.5;
+  var tgt;
   if (isPerson) {
     tgt = pick(DATA.personTargets);
   } else {
     tgt = getTarget(loc);
   }
-  const intel = pickUnique(DATA.reconIntel, Math.random() < 0.5 ? 2 : 1).join(" · ");
-  const rules = getRules("recon");
-  const extra = maybe(DATA.extraRules);
-  const nc = pick(DATA.noncombatant);
-  const gd = pick(DATA.guardMod);
-  const threat = getThreat(gd, rank);
-  const weather = getWeather(loc);
-  const env = getEnvironment(loc);
-  const poi_val = maybe(DATA.poi);
-  const obj = maybe(DATA.additionalObjectives.recon || []);
+  var intelCount = Math.random() < 0.5 ? 2 : 1;
+  var intel = pickUnique(DATA.reconIntel, intelCount).join(" · ");
+  var rules = getRules("recon");
+  var extra = maybe(DATA.extraRules);
+  var nc = pick(DATA.noncombatant);
+  var gd = pick(DATA.guardMod);
+  var threat = getThreat(gd, rank);
+  var weather = getWeather(loc);
+  var env = getEnvironment(loc, false);
+  var poiVal = maybe(DATA.poi);
+  var objPool = DATA.additionalObjectives.recon || [];
+  var obj = maybe(objPool);
 
-  let html = buildField("Location", loc);
+  var html = buildField("Location", loc);
   html += buildField("Recon Target", tgt);
   html += buildField("Required Intel", intel);
   html += buildField("Special Rules", rules);
@@ -271,25 +310,26 @@ function generateRecon(rank) {
   html += buildThreatField("Threat Level", threat);
   html += buildField("Weather", weather);
   html += buildField("Environment", env);
-  if (poi_val) html += buildField("Point of Interest", poi_val);
+  if (poiVal) html += buildField("Point of Interest", poiVal);
   if (obj) html += buildField("Additional Objective", obj);
-  return { html, rank, type: "recon", title: "Reconnaissance Mission" };
+  return { html: html, rank: rank, type: "recon", title: "Reconnaissance Mission" };
 }
 
 function generateTheft(rank) {
-  const isVillage = Math.random() < 0.02;
-  const loc = isVillage ? "A Hidden Village" : pick(DATA.locations);
-  const tgt = isVillage ? pick(DATA.theftVillage) : pick(DATA.theftGeneric);
-  const rules = getRules("theft");
-  const extra = maybe(DATA.extraRules);
-  const nc = pick(DATA.noncombatant);
-  const gd = pick(DATA.guardMod);
-  const threat = getThreat(gd, rank);
-  const weather = getWeather(loc === "A Hidden Village" ? "Land of Fire" : loc);
-  const env = getEnvironment(loc === "A Hidden Village" ? "Land of Fire" : loc, isVillage);
-  const poi_val = maybe(DATA.poi);
+  var isVillage = Math.random() < 0.02;
+  var loc = isVillage ? "A Hidden Village" : pick(DATA.locations);
+  var tgt = isVillage ? pick(DATA.theftVillage) : pick(DATA.theftGeneric);
+  var rules = getRules("theft");
+  var extra = maybe(DATA.extraRules);
+  var nc = pick(DATA.noncombatant);
+  var gd = pick(DATA.guardMod);
+  var threat = getThreat(gd, rank);
+  var weatherLoc = isVillage ? "Land of Fire" : loc;
+  var weather = getWeather(weatherLoc);
+  var env = getEnvironment(isVillage ? "Land of Fire" : loc, isVillage);
+  var poiVal = maybe(DATA.poi);
 
-  let html = buildField("Location", loc);
+  var html = buildField("Location", loc);
   html += buildField("Steal", tgt);
   html += buildField("Special Rules", rules);
   if (extra) html += buildField("Extra Modifier", extra);
@@ -298,29 +338,30 @@ function generateTheft(rank) {
   html += buildThreatField("Threat Level", threat);
   html += buildField("Weather", weather);
   html += buildField("Environment", env);
-  if (poi_val) html += buildField("Point of Interest", poi_val);
-  return { html, rank, type: "theft", title: "Theft Mission" };
+  if (poiVal) html += buildField("Point of Interest", poiVal);
+  return { html: html, rank: rank, type: "theft", title: "Theft Mission" };
 }
 
 function generateAcquire(rank) {
-  const isVillage = Math.random() < 0.02;
-  const loc = isVillage ? "Own Hidden Village" : pick(DATA.locations);
-  const tgt = isVillage ? pick(DATA.villageTargets) : pick(DATA.acquireTargets);
-  const mp = pick(DATA.acquireParams);
-  const rules = getRules("acquire");
-  const extra = maybe(DATA.extraRules);
-  const tl = pick(DATA.targetLocation);
-  const gd = pick(DATA.guardMod);
-  const po = pick(DATA.populace);
-  const tt = resolveTargetThreat(pick(DATA.targetThreat), rank);
-  const threat = getThreat(gd, rank);
-  const weather = getWeather(loc === "Own Hidden Village" ? "Land of Fire" : loc);
-  const env = getEnvironment(loc === "Own Hidden Village" ? "Land of Fire" : loc, isVillage);
-  const setting = maybe(DATA.envGeneric);
-  const mil = maybe(DATA.envMilitary);
-  const poi_val = maybe(DATA.poi);
+  var isVillage = Math.random() < 0.02;
+  var loc = isVillage ? "Own Hidden Village" : pick(DATA.locations);
+  var tgt = isVillage ? pick(DATA.villageTargets) : pick(DATA.acquireTargets);
+  var mp = pick(DATA.acquireParams);
+  var rules = getRules("acquire");
+  var extra = maybe(DATA.extraRules);
+  var tl = pick(DATA.targetLocation);
+  var gd = pick(DATA.guardMod);
+  var po = pick(DATA.populace);
+  var tt = resolveTargetThreat(pick(DATA.targetThreat), rank);
+  var threat = getThreat(gd, rank);
+  var weatherLoc = isVillage ? "Land of Fire" : loc;
+  var weather = getWeather(weatherLoc);
+  var env = getEnvironment(isVillage ? "Land of Fire" : loc, isVillage);
+  var setting = maybe(DATA.envGeneric);
+  var mil = maybe(DATA.envMilitary);
+  var poiVal = maybe(DATA.poi);
 
-  let html = buildField("Location", loc);
+  var html = buildField("Location", loc);
   html += buildField("Target", tgt);
   html += buildField("Parameters", mp);
   html += buildField("Target Threat", tt);
@@ -334,32 +375,36 @@ function generateAcquire(rank) {
   html += buildField("Environment", env);
   if (setting) html += buildField("Setting", setting);
   if (mil) html += buildField("Military Setting", mil);
-  if (poi_val) html += buildField("Point of Interest", poi_val);
-  return { html, rank, type: "acquire", title: "Target Acquisition Mission" };
+  if (poiVal) html += buildField("Point of Interest", poiVal);
+  return { html: html, rank: rank, type: "acquire", title: "Target Acquisition Mission" };
 }
 
-function generateCaravan(rank, origin = "Konohagakure") {
-  const pool = DATA.destinations.filter(d => d !== origin);
-  const dest = pick(pool);
-  const ca = pick(DATA.caravanCargoAmount);
-  const ct = pick(DATA.caravanCargoType);
-  const tv = pick(DATA.caravanTravelers);
-  const cs = pick(DATA.caravanSize);
-  const rules = getRules("caravan");
-  const extra = maybe(DATA.extraRules);
-  const threatObj = resolveThreatGroup(pick(DATA.caravanThreats), rank);
-  const weather = getWeather("Land of Fire");
+function generateCaravan(rank, origin) {
+  if (!origin) origin = "Konohagakure";
+  var pool = [];
+  for (var i = 0; i < DATA.destinations.length; i++) {
+    if (DATA.destinations[i] !== origin) pool.push(DATA.destinations[i]);
+  }
+  var dest = pick(pool);
+  var ca = pick(DATA.caravanCargoAmount);
+  var ct = pick(DATA.caravanCargoType);
+  var tv = pick(DATA.caravanTravelers);
+  var cs = pick(DATA.caravanSize);
+  var rules = getRules("caravan");
+  var extra = maybe(DATA.extraRules);
+  var threatObj = resolveThreatGroup(pick(DATA.caravanThreats), rank);
+  var weather = getWeather("Land of Fire");
 
-  const oe = DATA.caravanEnv[origin] || ["Road"];
-  const oen = pick(oe);
+  var oe = DATA.caravanEnv[origin] || ["Road"];
+  var oen = pick(oe);
 
-  const dl = dest.replace(" capital", "");
-  const de = DATA.caravanEnvLands[dl] || DATA.caravanEnv[dest] || ["Capital"];
-  const den = pick(de);
+  var dl = dest.replace(" capital", "");
+  var de = DATA.caravanEnvLands[dl] || DATA.caravanEnv[dest] || ["Road"];
+  var den = pick(de);
 
-  const poi_val = maybe(DATA.poi);
+  var poiVal = maybe(DATA.poi);
 
-  let html = buildField("Origin", origin);
+  var html = buildField("Origin", origin);
   html += buildField("Destination", dest);
   html += buildField("Cargo Amount", ca);
   html += buildField("Cargo Type", ct);
@@ -371,13 +416,13 @@ function generateCaravan(rank, origin = "Konohagakure") {
   html += buildField("Weather", weather);
   html += buildField("Origin Terrain", oen);
   html += buildField("Destination Terrain", den);
-  if (poi_val) html += buildField("Point of Interest", poi_val);
-  return { html, rank, type: "caravan", title: "Caravan Escort Mission" };
+  if (poiVal) html += buildField("Point of Interest", poiVal);
+  return { html: html, rank: rank, type: "caravan", title: "Caravan Escort Mission" };
 }
 
-// ─── UI ───
+// ─── GENERATOR MAP ───
 
-const generators = {
+var generators = {
   sabotage: generateSabotage,
   assassinate: generateAssassinate,
   bodyguard: generateBodyguard,
@@ -388,70 +433,78 @@ const generators = {
   caravan: generateCaravan
 };
 
-function generate() {
-  const type = document.getElementById("missionType").value;
-  const rank = document.getElementById("rank").value;
-  const originSel = document.getElementById("origin");
-  const origin = originSel ? originSel.value : "Konohagakure";
+// ─── UI ───
 
-  let result;
+function generate() {
+  var type = document.getElementById("missionType").value;
+  var rank = document.getElementById("rank").value;
+  var originSel = document.getElementById("origin");
+  var origin = originSel ? originSel.value : "Konohagakure";
+
+  var result;
   if (type === "caravan") {
     result = generateCaravan(rank, origin);
   } else {
     result = generators[type](rank);
   }
 
-  const output = document.getElementById("output");
-  const card = document.getElementById("missionCard");
-  const titleEl = document.getElementById("missionTitle");
-  const fieldsEl = document.getElementById("missionFields");
-  const rankBadge = document.getElementById("rankBadge");
+  var output = document.getElementById("output");
+  var card = document.getElementById("missionCard");
+  var titleEl = document.getElementById("missionTitle");
+  var fieldsEl = document.getElementById("missionFields");
+  var rankBadge = document.getElementById("rankBadge");
 
   card.style.borderColor = DATA.colors[type];
   titleEl.style.color = DATA.colors[type];
   titleEl.textContent = result.title;
   fieldsEl.innerHTML = result.html;
-  rankBadge.textContent = `Player Rank: ${rank}`;
+  rankBadge.textContent = "Player Rank: " + rank;
   rankBadge.style.background = DATA.colors[type];
   output.classList.remove("hidden");
 
   // Build copy text
-  // Build copy text
-let copyText = `**${result.title}**\n`;
-const allElements = fieldsEl.querySelectorAll(".field, .threat-breakdown");
-allElements.forEach(el => {
-  if (el.classList.contains("field")) {
-    const label = el.querySelector(".field-label").textContent;
-    const value = el.querySelector(".field-value").textContent;
-    copyText += `◈ ${label} ${value}\n`;
-  } else if (el.classList.contains("threat-breakdown")) {
-    const lines = el.querySelectorAll(".threat-line");
-    lines.forEach(line => {
-      copyText += `   ↳ ${line.textContent}\n`;
-    });
+  var copyText = "**" + result.title + "**\n";
+  var allElements = fieldsEl.children;
+  for (var i = 0; i < allElements.length; i++) {
+    var el = allElements[i];
+    if (el.classList.contains("field")) {
+      var label = el.querySelector(".field-label").textContent;
+      var value = el.querySelector(".field-value").textContent;
+      copyText += "◈ " + label + " " + value + "\n";
+    } else if (el.classList.contains("threat-breakdown")) {
+      var lines = el.querySelectorAll(".threat-line");
+      for (var j = 0; j < lines.length; j++) {
+        copyText += "   ↳ " + lines[j].textContent + "\n";
+      }
+    }
   }
-});
-copyText += `\nPlayer Rank: ${rank}`;
-document.getElementById("copyData").value = copyText;
+  copyText += "\nPlayer Rank: " + rank;
+  document.getElementById("copyData").value = copyText;
+
+  // Animate
+  card.style.animation = "none";
+  card.offsetHeight;
+  card.style.animation = "fadeSlideIn 0.4s ease-out";
+}
 
 function copyToClipboard() {
-  const copyData = document.getElementById("copyData");
+  var copyData = document.getElementById("copyData");
   copyData.select();
   document.execCommand("copy");
 
-  const btn = document.getElementById("copyBtn");
-  const original = btn.textContent;
+  var btn = document.getElementById("copyBtn");
+  var original = btn.textContent;
   btn.textContent = "Copied!";
   btn.classList.add("copied");
-  setTimeout(() => {
+  setTimeout(function() {
     btn.textContent = original;
     btn.classList.remove("copied");
   }, 1500);
 }
 
 function toggleOrigin() {
-  const type = document.getElementById("missionType").value;
-  const originGroup = document.getElementById("originGroup");
+  var type = document.getElementById("missionType").value;
+  var originGroup = document.getElementById("originGroup");
   if (type === "caravan") {
     originGroup.classList.remove("hidden");
   } else {
@@ -459,7 +512,7 @@ function toggleOrigin() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", function() {
   document.getElementById("missionType").addEventListener("change", toggleOrigin);
   toggleOrigin();
 });

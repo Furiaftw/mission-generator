@@ -121,88 +121,89 @@ const DATA = {
   ],
 
   singleThreat: [
-  { name: "Equivalent", entries: [{ count: "1", rankOffset: 0 }] },
-  { name: "Stronger", entries: [{ count: "1", rankOffset: 1 }] },
-  { name: "Much Stronger", entries: [{ count: "1", rankOffset: 2 }] }
-],
+    { name: "Equivalent", entries: [{ count: "1", rankOffset: 0 }] },
+    { name: "Stronger", entries: [{ count: "1", rankOffset: 1 }] },
+    { name: "Much Stronger", entries: [{ count: "1", rankOffset: 2 }] }
+  ],
 
-smallThreat: [
-  { name: "Mentor and Apprentice", entries: [
-    { count: "1", rankOffset: 1 },
-    { count: "1", rankOffset: -2 }
-  ]},
-  { name: "Perfect Pair", entries: [
-    { count: "2", rankOffset: 1 }
-  ]},
-  { name: "Good Ol' Team", entries: [
-    { count: "3", rankOffset: 0 }
-  ]},
-  { name: "Hired Hands", entries: [
-    { count: "4", rankOffset: -1 }
-  ]},
-  { name: "More Hired Hands", entries: [
-    { count: "5", rankOffset: -1 }
-  ]},
-  { name: "Mercenary Team", entries: [
-    { count: "4", rankOffset: -1 },
-    { count: "1", rankOffset: 1 }
-  ]}
-],
+  smallThreat: [
+    { name: "Mentor and Apprentice", entries: [
+      { count: "1", rankOffset: 1 },
+      { count: "1", rankOffset: -2 }
+    ]},
+    { name: "Perfect Pair", entries: [
+      { count: "2", rankOffset: 1 }
+    ]},
+    { name: "Good Ol' Team", entries: [
+      { count: "3", rankOffset: 0 }
+    ]},
+    { name: "Hired Hands", entries: [
+      { count: "4", rankOffset: -1 }
+    ]},
+    { name: "More Hired Hands", entries: [
+      { count: "5", rankOffset: -1 }
+    ]},
+    { name: "Mercenary Team", entries: [
+      { count: "4", rankOffset: -1 },
+      { count: "1", rankOffset: 1 }
+    ]}
+  ],
 
-squadThreat: [
-  { name: "Local Garrison", entries: [
-    { count: "6-12", rankOffset: -3 },
-    { count: "1-2", rankOffset: -2 }
-  ]},
-  { name: "Militia", entries: [
-    { count: "20", rankOffset: -4, minRank: "E" }
-  ]},
-  { name: "Sorta Elite Team", entries: [
-    { count: "4", rankOffset: -1 },
-    { count: "8-12", rankOffset: -3 }
-  ]},
-  { name: "Champion and Fodder", entries: [
-    { count: "10-15", rankOffset: -3 },
-    { count: "1", rankOffset: 1 }
-  ]},
-  { name: "Competent Force", entries: [
-    { count: "6-10", rankOffset: -1 }
-  ]}
-],
+  squadThreat: [
+    { name: "Local Garrison", entries: [
+      { count: "6-12", rankOffset: -3 },
+      { count: "1-2", rankOffset: -2 }
+    ]},
+    { name: "Militia", entries: [
+      { count: "20", rankOffset: -4, minRank: "E" }
+    ]},
+    { name: "Sorta Elite Team", entries: [
+      { count: "4", rankOffset: -1 },
+      { count: "8-12", rankOffset: -3 }
+    ]},
+    { name: "Champion and Fodder", entries: [
+      { count: "10-15", rankOffset: -3 },
+      { count: "1", rankOffset: 1 }
+    ]},
+    { name: "Competent Force", entries: [
+      { count: "6-10", rankOffset: -1 }
+    ]}
+  ],
 
-armyThreat: [
-  { name: "Riot", entries: [
-    { count: "20+", fixedRank: "F" },
-    { count: "0-20", fixedRank: "E" }
-  ]},
-  { name: "Actual Army", entries: [
-    { count: "40+", rankOffset: -3, minRank: "E" },
-    { count: "1-5", rankOffset: -2, minRank: "E" }
-  ]},
-  { name: "Eclectic Mix", entries: [
-    { count: "30+", rankOffset: -4, minRank: "E" },
-    { count: "10", rankOffset: -3 },
-    { count: "4", rankOffset: -2 },
-    { count: "1", rankOffset: 0 }
-  ]},
-  { name: "Whole Damn Village", entries: [
-    { count: "50+", fixedRank: "F" }
-  ]},
-  { name: "Champion and Army", entries: [
-    { count: "20+", rankOffset: -4, minRank: "E" },
-    { count: "1-2", rankOffset: 1 }
-  ]}
-],
+  armyThreat: [
+    { name: "Riot", entries: [
+      { count: "20+", fixedRank: "F" },
+      { count: "0-20", fixedRank: "E" }
+    ]},
+    { name: "Actual Army", entries: [
+      { count: "40+", rankOffset: -3, minRank: "E" },
+      { count: "1-5", rankOffset: -2, minRank: "E" }
+    ]},
+    { name: "Eclectic Mix", entries: [
+      { count: "30+", rankOffset: -4, minRank: "E" },
+      { count: "10", rankOffset: -3 },
+      { count: "4", rankOffset: -2 },
+      { count: "1", rankOffset: 0 }
+    ]},
+    { name: "Whole Damn Village", entries: [
+      { count: "50+", fixedRank: "F" }
+    ]},
+    { name: "Champion and Army", entries: [
+      { count: "20+", rankOffset: -4, minRank: "E" },
+      { count: "1-2", rankOffset: 1 }
+    ]}
+  ],
 
   targetThreat: [
-  { name: "Civilian", fixedRank: "F" },
-  { name: "Trained Civilian", fixedRank: "E" },
-  { name: "Much Weaker", rankOffset: -2 },
-  { name: "Weaker", rankOffset: -1 },
-  { name: "Equivalent", rankOffset: 0 },
-  { name: "Stronger", rankOffset: 1 },
-  { name: "Much Stronger", rankOffset: 2 }
-],
+    { name: "Civilian", fixedRank: "F" },
+    { name: "Trained Civilian", fixedRank: "E" },
+    { name: "Much Weaker", rankOffset: -2 },
+    { name: "Weaker", rankOffset: -1 },
+    { name: "Equivalent", rankOffset: 0 },
+    { name: "Stronger", rankOffset: 1 },
+    { name: "Much Stronger", rankOffset: 2 }
+  ],
+
   env: {
     "Land of Fire": ["Forest Clearing", "Forested Road", "Small Town", "Capital"],
     "Land of Wind": ["Sand Dunes", "Oasis", "Sandstorm", "Small Village", "Capital"],
@@ -341,49 +342,49 @@ armyThreat: [
   caravanSize: ["A single cart", "Two carts", "Three carts"],
 
   caravanThreats: [
-  { name: "Bandits block the road", entries: [
-    { count: "5-10", rankOffset: -2 },
-    { count: "1", rankOffset: -1 }
-  ]},
-  { name: "Enemies block the road", entries: [
-    { count: "3-4", rankOffset: -1 }
-  ]},
-  { name: "Enemies with a leader block the road", entries: [
-    { count: "2", rankOffset: -1 },
-    { count: "1", rankOffset: 0 }
-  ]},
-  { name: "Strong enemies with a leader block the road", entries: [
-    { count: "2", rankOffset: 0 },
-    { count: "1", rankOffset: 1 }
-  ]},
-  { name: "A single dangerous enemy blocks the road", entries: [
-    { count: "1", rankOffset: 2 }
-  ]},
-  { name: "Bandits ambush the caravan", entries: [
-    { count: "5-10", rankOffset: -2 },
-    { count: "1", rankOffset: -1 }
-  ]},
-  { name: "Enemies ambush the caravan", entries: [
-    { count: "3-4", rankOffset: -1 }
-  ]},
-  { name: "Enemies with a leader ambush the caravan", entries: [
-    { count: "2", rankOffset: -1 },
-    { count: "1", rankOffset: 0 }
-  ]},
-  { name: "Strong enemies with a leader ambush the caravan", entries: [
-    { count: "2", rankOffset: 0 },
-    { count: "1", rankOffset: 1 }
-  ]},
-  { name: "Bandits ambush camp at night", entries: [
-    { count: "5-10", rankOffset: -2 }
-  ]},
-  { name: "Enemies ambush camp at night", entries: [
-    { count: "3", rankOffset: -1 }
-  ]},
-  { name: "Strong enemies ambush camp at night", entries: [
-    { count: "3", rankOffset: 0 }
-  ]}
-],
+    { name: "Bandits block the road", entries: [
+      { count: "5-10", rankOffset: -2 },
+      { count: "1", rankOffset: -1 }
+    ]},
+    { name: "Enemies block the road", entries: [
+      { count: "3-4", rankOffset: -1 }
+    ]},
+    { name: "Enemies with a leader block the road", entries: [
+      { count: "2", rankOffset: -1 },
+      { count: "1", rankOffset: 0 }
+    ]},
+    { name: "Strong enemies with a leader block the road", entries: [
+      { count: "2", rankOffset: 0 },
+      { count: "1", rankOffset: 1 }
+    ]},
+    { name: "A single dangerous enemy blocks the road", entries: [
+      { count: "1", rankOffset: 2 }
+    ]},
+    { name: "Bandits ambush the caravan", entries: [
+      { count: "5-10", rankOffset: -2 },
+      { count: "1", rankOffset: -1 }
+    ]},
+    { name: "Enemies ambush the caravan", entries: [
+      { count: "3-4", rankOffset: -1 }
+    ]},
+    { name: "Enemies with a leader ambush the caravan", entries: [
+      { count: "2", rankOffset: -1 },
+      { count: "1", rankOffset: 0 }
+    ]},
+    { name: "Strong enemies with a leader ambush the caravan", entries: [
+      { count: "2", rankOffset: 0 },
+      { count: "1", rankOffset: 1 }
+    ]},
+    { name: "Bandits ambush camp at night", entries: [
+      { count: "5-10", rankOffset: -2 }
+    ]},
+    { name: "Enemies ambush camp at night", entries: [
+      { count: "3", rankOffset: -1 }
+    ]},
+    { name: "Strong enemies ambush camp at night", entries: [
+      { count: "3", rankOffset: 0 }
+    ]}
+  ],
 
   destinations: [
     "Konohagakure", "Sunagakure", "Iwagakure", "Kumogakure", "Kirigakure",
