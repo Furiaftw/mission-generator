@@ -138,7 +138,7 @@ function generateSabotage(rank) {
   if (extra) html += buildField("Extra Modifier", extra);
   html += buildField("Non-Combatants", nc);
   html += buildField("Guards", gd);
-  html += buildField("Threat Level", threat);
+  html += buildThreatField("Threat Level", threat);
   html += buildField("Weather", weather);
   html += buildField("Environment", env);
   if (poi_val) html += buildField("Point of Interest", poi_val);
@@ -155,7 +155,7 @@ function generateAssassinate(rank) {
   const tl = pick(DATA.targetLocation);
   const gd = pick(DATA.guardMod);
   const po = pick(DATA.populace);
-  const tt = pick(DATA.targetThreat).replace(/Rank/g, rank);
+  const tt = resolveTargetThreat(pick(DATA.targetThreat), rank);
   const threat = getThreat(gd, rank);
   const weather = getWeather(loc === "Own Hidden Village" ? "Land of Fire" : loc);
   const env = getEnvironment(loc === "Own Hidden Village" ? "Land of Fire" : loc, isVillage);
@@ -169,7 +169,7 @@ function generateAssassinate(rank) {
   html += buildField("Special Rules", rules);
   if (extra) html += buildField("Extra Modifier", extra);
   html += buildField("Local Populace", po);
-  html += buildField("Guards", gd);
+  html += buildThreatField("Guard Threat", threat);
   html += buildField("Guard Threat", threat);
   html += buildField("Weather", weather);
   html += buildField("Environment", env);
@@ -189,7 +189,7 @@ function generateBodyguard(rank) {
   const mv = pick(DATA.targetMovement);
   const am = pick(DATA.assassinMod);
   const po = pick(DATA.populace);
-  const tt = pick(DATA.targetThreat).replace(/Rank/g, rank);
+  const tt = resolveTargetThreat(pick(DATA.targetThreat), rank);
   const threat = getThreat(am, rank);
   const weather = getWeather(loc === "A Hidden Village" ? "Land of Fire" : loc);
   const env = getEnvironment(loc === "A Hidden Village" ? "Land of Fire" : loc, isVillage);
@@ -206,7 +206,7 @@ function generateBodyguard(rank) {
   if (extra) html += buildField("Extra Modifier", extra);
   html += buildField("Local Populace", po);
   html += buildField("Attackers", am);
-  html += buildField("Attacker Threat", threat);
+  html += buildThreatField("Attacker Threat", threat);
   html += buildField("Weather", weather);
   html += buildField("Environment", env);
   if (setting) html += buildField("Setting", setting);
@@ -233,7 +233,7 @@ function generateDefend(rank) {
   if (extra) html += buildField("Extra Modifier", extra);
   html += buildField("Non-Combatants", nc);
   html += buildField("Attackers", am);
-  html += buildField("Threat Level", threat);
+  html += buildThreatField("Threat Level", threat);
   html += buildField("Weather", weather);
   html += buildField("Environment", env);
   if (poi_val) html += buildField("Point of Interest", poi_val);
@@ -268,7 +268,7 @@ function generateRecon(rank) {
   if (extra) html += buildField("Extra Modifier", extra);
   html += buildField("Non-Combatants", nc);
   html += buildField("Guards", gd);
-  html += buildField("Threat Level", threat);
+  html += buildThreatField("Threat Level", threat);
   html += buildField("Weather", weather);
   html += buildField("Environment", env);
   if (poi_val) html += buildField("Point of Interest", poi_val);
@@ -295,7 +295,7 @@ function generateTheft(rank) {
   if (extra) html += buildField("Extra Modifier", extra);
   html += buildField("Non-Combatants", nc);
   html += buildField("Guards", gd);
-  html += buildField("Threat Level", threat);
+  html += buildThreatField("Threat Level", threat);
   html += buildField("Weather", weather);
   html += buildField("Environment", env);
   if (poi_val) html += buildField("Point of Interest", poi_val);
@@ -312,7 +312,7 @@ function generateAcquire(rank) {
   const tl = pick(DATA.targetLocation);
   const gd = pick(DATA.guardMod);
   const po = pick(DATA.populace);
-  const tt = pick(DATA.targetThreat).replace(/Rank/g, rank);
+  const tt = resolveTargetThreat(pick(DATA.targetThreat), rank);
   const threat = getThreat(gd, rank);
   const weather = getWeather(loc === "Own Hidden Village" ? "Land of Fire" : loc);
   const env = getEnvironment(loc === "Own Hidden Village" ? "Land of Fire" : loc, isVillage);
@@ -329,7 +329,7 @@ function generateAcquire(rank) {
   if (extra) html += buildField("Extra Modifier", extra);
   html += buildField("Local Populace", po);
   html += buildField("Guards", gd);
-  html += buildField("Guard Threat", threat);
+  html += buildThreatField("Guard Threat", threat);
   html += buildField("Weather", weather);
   html += buildField("Environment", env);
   if (setting) html += buildField("Setting", setting);
@@ -347,7 +347,7 @@ function generateCaravan(rank, origin = "Konohagakure") {
   const cs = pick(DATA.caravanSize);
   const rules = getRules("caravan");
   const extra = maybe(DATA.extraRules);
-  const threat = pick(DATA.caravanThreats).replace(/Rank/g, rank);
+  const threatObj = resolveThreatGroup(pick(DATA.caravanThreats), rank);
   const weather = getWeather("Land of Fire");
 
   const oe = DATA.caravanEnv[origin] || ["Road"];
@@ -367,7 +367,7 @@ function generateCaravan(rank, origin = "Konohagakure") {
   html += buildField("Caravan Size", cs);
   html += buildField("Special Rules", rules);
   if (extra) html += buildField("Extra Modifier", extra);
-  html += buildField("Threat", threat);
+  html += buildThreatField("Threat", threatObj);
   html += buildField("Weather", weather);
   html += buildField("Origin Terrain", oen);
   html += buildField("Destination Terrain", den);
@@ -416,21 +416,23 @@ function generate() {
   output.classList.remove("hidden");
 
   // Build copy text
-  let copyText = `**${result.title}**\n`;
-  const fields = fieldsEl.querySelectorAll(".field");
-  fields.forEach(f => {
-    const label = f.querySelector(".field-label").textContent;
-    const value = f.querySelector(".field-value").textContent;
+  // Build copy text
+let copyText = `**${result.title}**\n`;
+const allElements = fieldsEl.querySelectorAll(".field, .threat-breakdown");
+allElements.forEach(el => {
+  if (el.classList.contains("field")) {
+    const label = el.querySelector(".field-label").textContent;
+    const value = el.querySelector(".field-value").textContent;
     copyText += `◈ ${label} ${value}\n`;
-  });
-  copyText += `\nPlayer Rank: ${rank}`;
-  document.getElementById("copyData").value = copyText;
-
-  // Animate
-  card.style.animation = "none";
-  card.offsetHeight;
-  card.style.animation = "fadeSlideIn 0.4s ease-out";
-}
+  } else if (el.classList.contains("threat-breakdown")) {
+    const lines = el.querySelectorAll(".threat-line");
+    lines.forEach(line => {
+      copyText += `   ↳ ${line.textContent}\n`;
+    });
+  }
+});
+copyText += `\nPlayer Rank: ${rank}`;
+document.getElementById("copyData").value = copyText;
 
 function copyToClipboard() {
   const copyData = document.getElementById("copyData");
